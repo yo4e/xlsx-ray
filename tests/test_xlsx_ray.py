@@ -114,7 +114,7 @@ def test_formula_formatting_change_is_low_risk(tmp_path: Path) -> None:
             SheetSpec(
                 name="Model",
                 part="xl/worksheets/sheet1.xml",
-                cells={"A1": ("2", "= sum( B1:B2 )", None)},
+                cells={"A1": ("2", "=sum(B1:B2)", None)},
             )
         ]
     )

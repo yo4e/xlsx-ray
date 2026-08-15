@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from typing import Any
 
-from .formulas import extract_references
+from .formulas import canonical_reference, extract_references
 from .models import Change, RiskLevel, WorkbookFact, WorksheetFact
 
 
@@ -62,14 +62,17 @@ def _dependency_index(workbook: WorkbookFact) -> dict[str, set[str]]:
                 continue
             target = f"{sheet_name}!{address}"
             for reference in extract_references(cell.formula):
-                if "!" not in reference:
-                    reference = f"{sheet_name}!{reference}"
-                index[reference].add(target)
+                canonical = canonical_reference(reference, sheet_name)
+                if canonical is not None:
+                    index[canonical].add(target)
     return index
 
 
 def _direct_impact(workbook: WorkbookFact, sheet_name: str, address: str) -> tuple[str, ...]:
-    return tuple(sorted(_dependency_index(workbook).get(f"{sheet_name}!{address}", set())))
+    key = canonical_reference(address, sheet_name)
+    if key is None:
+        return ()
+    return tuple(sorted(_dependency_index(workbook).get(key, set())))
 
 
 def _compare_cells(

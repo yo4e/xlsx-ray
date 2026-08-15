@@ -34,7 +34,7 @@ The inspector parses only relevant OOXML parts using Python's standard-library `
 | Fact | OOXML source | v0.1 treatment |
 |---|---|---|
 | Worksheets and cells | `xl/workbook.xml`, `xl/worksheets/*.xml` | Supported. Sheet rename is recognized only when a removed and added sheet retain the same worksheet part path. |
-| Formula text | `<f>` in worksheet cells | Supported as text only. Whitespace outside string literals and function-name casing are normalized conservatively to identify formatting-only edits. |
+| Formula text | `<f>` in worksheet cells | Supported as text only. Only function-name casing outside string literals is normalized; all whitespace is preserved because Excel whitespace can be meaningful. |
 | Defined names | `xl/workbook.xml` | Supported. Added, removed, and changed references are compared. |
 | External links | `xl/workbook.xml.rels`, `xl/externalLinks/*` relationships | Supported as targets only. Targets are never opened. |
 | Data validation | `<dataValidations>` | Supported as a canonical XML fact. Rule semantics are not evaluated. |
@@ -59,11 +59,11 @@ Risk is not a black-box score. Each change is assigned a fixed level and textual
 
 ### Formula impact evidence
 
-For a changed formula cell, XLSX-Ray reports direct cells whose formula text contains an A1 reference to that cell. This is a **textual direct-reference index**, not an Excel dependency engine. It does not resolve named references, structured references, 3D references, `INDIRECT`, dynamic arrays, or formulas on a sheet that was renamed with unrewritten cross-sheet references.
+For a changed formula cell, XLSX-Ray reports direct cells whose formula text contains an A1 reference to that cell. The index excludes string literals and correlates direct A1 references case-insensitively while ignoring `$` absolute markers; quoted sheet names are supported. This is still **textual review evidence**, not an Excel dependency engine. It does not resolve named references, structured references, 3D references, `INDIRECT`, dynamic arrays, external workbook references, or formulas on a sheet that was renamed with unrewritten cross-sheet references.
 
 ## Safety boundary
 
-XLSX-Ray treats every workbook as untrusted data. v0.1 rejects archives with unsafe paths, too many members, excessive uncompressed size, suspicious compression ratio, oversize XML parts, malformed XML, or XML declarations containing `DOCTYPE` / `ENTITY`. These are parser limits, not a sandbox or a proof that every hostile input is safe.
+XLSX-Ray treats every workbook as untrusted data. v0.1 rejects duplicate or ambiguous ZIP member names, unsafe paths, too many members, excessive aggregate uncompressed size, suspicious per-member compression ratio, oversize XML parts, malformed or unexpected-namespace XML, overly deep XML, XML with excessive element/text counts, unsafe internal worksheet relationship targets, and XML declarations containing `DOCTYPE` / `ENTITY`. These checks are bounded parser mitigations, not a sandbox or proof that every hostile input is safe.
 
 The tool never:
 
@@ -77,4 +77,4 @@ The tool never:
 
 ## Compatibility and limitations
 
-See [COMPATIBILITY.md](COMPATIBILITY.md) for the supported-feature matrix and limitations. XLSX-Ray is tested with synthetic `.xlsx` and `.xlsm` package fixtures. It is not a claim of complete Excel feature compatibility.
+See [COMPATIBILITY.md](COMPATIBILITY.md) for the supported-feature matrix and limitations. XLSX-Ray is tested with both synthetic `.xlsx`/`.xlsm` package fixtures and an `openpyxl`-generated workbook; this is not a claim of complete Excel feature compatibility.
