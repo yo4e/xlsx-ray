@@ -1,0 +1,39 @@
+name: Review workbook changes
+
+on:
+  pull_request:
+    paths:
+      - "**/*.xlsx"
+      - "**/*.xlsm"
+
+permissions:
+  contents: read
+
+jobs:
+  review-workbook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # For a changed file, materialize a baseline from the PR base ref.
+      - name: Materialize baseline workbook
+        run: |
+          mkdir -p .xlsx-ray/base
+          git show "${{ github.event.pull_request.base.sha }}:models/budget.xlsx" > .xlsx-ray/base/budget.xlsx
+
+      # In the XLSX-Ray repository itself use `uses: ./`.
+      # After publishing a tag, replace this with `uses: yo4e/xlsx-ray@v0`.
+      - uses: ./
+        with:
+          old: .xlsx-ray/base/budget.xlsx
+          new: models/budget.xlsx
+          fail-on: high
+          report-directory: .xlsx-ray/reports
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xlsx-ray-report
+          path: .xlsx-ray/reports/
