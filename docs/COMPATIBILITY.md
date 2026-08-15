@@ -4,11 +4,11 @@
 
 | Workbook fact | `.xlsx` | `.xlsm` | Notes |
 |---|---:|---:|---|
-| Workbook and worksheet discovery | Yes | Yes | Missing or unresolved worksheet relationships become warnings rather than identity guesses. |
+| Workbook and worksheet discovery | Yes | Yes | Unresolved, duplicate, external, or unsafe worksheet relationships are rejected rather than guessed. Standard relative and `/xl/...` internal targets are supported. |
 | Sheet add/remove | Yes | Yes | High risk for removal; low risk for addition. |
 | Sheet rename | Yes | Yes | Reported only when the OOXML worksheet part path is retained and the mapping is unambiguous. |
 | Cell values | Yes | Yes | Text, inline string, shared string, and raw stored values are compared. Display formatting is not calculated. |
-| Formula text | Yes | Yes | Formula text is compared; results are never recalculated. Whitespace/function-name normalization is conservative. |
+| Formula text | Yes | Yes | Formula text is compared; results are never recalculated. Only function-name casing outside string literals is normalized, and all whitespace is preserved. |
 | Defined names | Yes | Yes | Workbook- and local-sheet-scoped names are compared as text references. |
 | External links | Yes | Yes | Relationship targets are compared but never opened. |
 | Data-validation facts | Yes | Yes | Canonical rule XML is compared; validation logic is not evaluated. |
@@ -21,8 +21,8 @@
 
 | Area | v0.1 behavior |
 |---|---|
-| Formula semantics | XLSX-Ray does not calculate formulas or prove equivalence. It normalizes only whitespace outside strings and function-name casing. |
-| Formula references | Direct A1 references are indexed as review evidence. Named references, structured references, 3D references, `INDIRECT`, spill ranges, and indirect dependencies are not resolved. |
+| Formula semantics | XLSX-Ray does not calculate formulas or prove equivalence. It normalizes only function-name casing outside string literals; it preserves whitespace because whitespace can be meaningful in Excel. |
+| Formula references | Direct A1 references outside string literals are indexed as review evidence; absolute markers, casing, and quoted sheet names are normalized for correlation. Named references, structured references, 3D references, `INDIRECT`, spill ranges, external workbooks, and indirect dependencies are not resolved. |
 | Cached formula values | Cached values for an unchanged formula are ignored, because v0.1 does not calculate formula results. |
 | Styles and formatting | Cell styles, conditional formatting semantics, drawing/layout changes, row heights, and column widths are not a supported semantic diff surface. |
 | Charts / pivot tables / slicers | Presence may be reported as unsupported. Their definitions and outputs are not compared. |
@@ -30,7 +30,7 @@
 | Encryption / password-protected packages | Not supported. Standard ZIP/OOXML package access is required. |
 | Legacy `.xls` / binary Excel | Not supported. Convert to `.xlsx` or `.xlsm` first. |
 | Non-OOXML files | Rejected. |
-| Security isolation | Archive and XML limits reduce common parser hazards but are not a substitute for operating-system sandboxing. Run untrusted files in an appropriately isolated environment. |
+| Security isolation | Duplicate/ambiguous ZIP names, size/member limits, compression ratio, XML namespace/DOCTYPE/entity/depth/element/text limits, and unsafe internal targets are rejected. These parser mitigations are not a substitute for operating-system sandboxing. |
 
 ## Why the scope is narrow
 

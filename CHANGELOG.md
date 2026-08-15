@@ -6,7 +6,19 @@ All notable changes to XLSX-Ray are documented here. The format follows [Keep a 
 
 ### Added
 
-- Placeholder for the next user-visible change.
+- Reproducible adversarial ZIP/XML fixtures and an `openpyxl`-generated workbook compatibility fixture.
+- Composite-Action integration coverage, built-distribution metadata validation, and documented release-candidate dry-run steps.
+- Node 24-compatible GitHub Actions workflow versions for checkout, Python setup, and artifact upload examples.
+
+### Changed
+
+- Direct formula-impact evidence now excludes string literals and correlates A1 references across absolute markers, casing, and quoted sheet names.
+- Function-name casing is the only formula normalization; all whitespace is preserved because Excel whitespace can be meaningful.
+- Unresolved, duplicate, external, or unsafe worksheet relationships now fail closed rather than producing a partial workbook report.
+
+### Security
+
+- Reject duplicate/ambiguous ZIP member names, unsafe internal worksheet targets, unexpected XML namespaces, and bounded XML depth/element/text exhaustion patterns.
 
 ## [0.1.0] - 2026-08-15
 

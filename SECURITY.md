@@ -17,8 +17,8 @@ Do not send real workbooks, personal data, credentials, or active macro payloads
 
 ## Security boundary
 
-XLSX-Ray parses untrusted OOXML packages with bounded, read-only ZIP/XML inspection. It rejects common unsafe conditions such as unsafe archive paths, size-limit breaches, suspicious compression ratios, malformed XML, and XML declarations containing `DOCTYPE` / `ENTITY`.
+XLSX-Ray parses untrusted OOXML packages with bounded, read-only ZIP/XML inspection. It rejects duplicate or ambiguous ZIP member names, unsafe archive paths, member-count and aggregate-uncompressed-size breaches, suspicious per-member compression ratios, oversize XML parts, malformed or unexpected-namespace XML, excessive XML depth/element/text counts, unsafe internal worksheet relationship targets, and XML declarations containing `DOCTYPE` / `ENTITY`.
 
-These checks are defense in depth, not a sandbox or a guarantee that any hostile workbook is harmless. Run untrusted input in an environment appropriate to your threat model.
+These checks are tested defense in depth, not a sandbox or a guarantee that any hostile workbook is harmless. The tool parses XML twice for bounded validation and interpretation, and it does not isolate CPU, process memory, or the Python runtime from a malicious file. Run untrusted input in an environment appropriate to your threat model.
 
 The project intentionally does not execute VBA, evaluate formulas, invoke Excel/LibreOffice, follow external links, upload workbook contents, or mutate files. A detected VBA project, formula, or external link is treated as data only.

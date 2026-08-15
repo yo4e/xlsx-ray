@@ -28,7 +28,10 @@ class WorkbookSpec:
 
 
 def _attrs(attrs: dict[str, str]) -> str:
-    return "".join(f' {key}="{escape(value)}"' for key, value in sorted(attrs.items()))
+    escaped = {'"': "&quot;", "'": "&apos;"}
+    return "".join(
+        f' {key}="{escape(value, entities=escaped)}"' for key, value in sorted(attrs.items())
+    )
 
 
 def _worksheet_xml(spec: SheetSpec) -> str:

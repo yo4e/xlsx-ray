@@ -34,3 +34,9 @@ XLSX-Ray should therefore proceed only with this narrow product boundary:
 - [ExcelCompare repository](https://github.com/na-ka-na/ExcelCompare).
 - [Git XL repository](https://github.com/xltrail/git-xl).
 
+
+## CI runtime refresh — 2026-08-15
+
+GitHub公式の[actions/checkout](https://github.com/actions/checkout) READMEを2026-08-15に確認した。`actions/checkout@v5` はNode.js 24 runtimeへ移行しており、self-hosted runnerでは最低v2.327.1が必要である。GitHub-hosted runnerを対象とするXLSX-RayのCIでは、Node.js 20 deprecation warningを回避するためcheckout v5と、同様にNode 24へ移行したsetup-python v6を使用する。self-hosted runner利用者にはこの最低runner要件をドキュメント化する。
+
+GitHub公式の[actions/upload-artifact](https://github.com/actions/upload-artifact)も2026-08-15に確認した。Node.js 20 warningを避けるため、GitHub-hosted runner向けのworkflow例ではNode 24対応の`actions/upload-artifact@v5`を使用する。GHESはv4以降をサポートしない場合があり、Node 24対応のv3.2.2を使う必要があるため、この例はGitHub.com/GitHub-hosted runner向けであることを明記する。

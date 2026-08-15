@@ -11,7 +11,7 @@ XLSX-Ray is a local, read-only CLI that compares `.xlsx` and `.xlsm` workbooks a
 | Review fact | What XLSX-Ray does |
 |---|---|
 | Worksheets | Finds additions, removals, and high-confidence renames. |
-| Cells and formulas | Reports value/formula changes; conservatively recognizes formatting-only formula edits. |
+| Cells and formulas | Reports value/formula changes; recognizes function-name casing-only formula edits, while preserving all whitespace. |
 | Defined names | Finds added, removed, and changed references. |
 | External links | Finds introduced and removed external link targets without following them. |
 | Data validation | Compares validation-rule facts and highlights removal/replacement. |
@@ -92,12 +92,16 @@ jobs:
   xlsx-ray:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+      - name: Materialize the PR-base workbook
+        run: |
+          mkdir -p .xlsx-ray/base
+          git show "${{ github.event.pull_request.base.sha }}:models/budget.xlsx" > .xlsx-ray/base/budget.xlsx
       - uses: yo4e/xlsx-ray@v0
         with:
-          old: models/budget.xlsx
+          old: .xlsx-ray/base/budget.xlsx
           new: models/budget.xlsx
           fail-on: high
 ```
@@ -110,7 +114,7 @@ XLSX-Ray complements, rather than replaces, a Git textconv. A textconv can show 
 
 ## Safety model
 
-The tool uses bounded, read-only ZIP/XML inspection. It rejects common unsafe archive/XML conditions, including unsafe member paths, archive/member size limits, suspicious compression ratios, malformed XML, and `DOCTYPE`/`ENTITY` declarations. These checks reduce common parser hazards but are **not** a sandbox. Treat untrusted workbooks according to your environment's security policy.
+The tool uses bounded, read-only ZIP/XML inspection. It rejects duplicate or unsafe member paths, archive/member size limits, suspicious compression ratios, malformed or unexpected-namespace XML, `DOCTYPE`/`ENTITY` declarations, overly deep XML, and unsafe worksheet relationship targets. These checks reduce common parser hazards but are **not** a sandbox. Treat untrusted workbooks according to your environment's security policy.
 
 XLSX-Ray never executes macros, evaluates formulas, starts Excel/LibreOffice, opens external links, uploads workbook contents, or changes the workbook under inspection.
 
@@ -123,17 +127,18 @@ python -m pip install -e ".[dev]"
 python -m pytest -q
 ruff check .
 python -m build
+python -m twine check dist/*
 ```
 
 The tests generate synthetic OOXML fixtures from code; no production workbook is used. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Why this project exists
 
-XLSX-Ray was created from a public, evidence-backed OSS opportunity study. The complete study, including 24 candidates, rankings, source URLs, and the direct-competitor analysis is preserved at [docs/OPPORTUNITY_RESEARCH_2026-08-15.md](docs/OPPORTUNITY_RESEARCH_2026-08-15.md). The refreshed implementation-time competitor check is in [docs/RESEARCH_REFRESH_NOTES.md](docs/RESEARCH_REFRESH_NOTES.md).
+XLSX-Ray was created from a public, evidence-backed OSS opportunity study. The complete study, including 24 candidates, rankings, source URLs, and the direct-competitor analysis is preserved at [docs/OPPORTUNITY_RESEARCH_2026-08-15.md](docs/OPPORTUNITY_RESEARCH_2026-08-15.md). The refreshed implementation-time competitor check is in [docs/RESEARCH_REFRESH_NOTES.md](docs/RESEARCH_REFRESH_NOTES.md), and the post-implementation audit/GO decision is in [docs/IMPLEMENTATION_REVIEW_2026-08-15.md](docs/IMPLEMENTATION_REVIEW_2026-08-15.md).
 
 ## Project status
 
-**v0.1.0-alpha.** The supported surface is deliberately narrow. See the [compatibility matrix](docs/COMPATIBILITY.md), [security policy](SECURITY.md), and [changelog](CHANGELOG.md) before adopting it for production controls.
+**v0.1.0 release candidate (untagged and unpublished).** The supported surface is deliberately narrow. See the [compatibility matrix](docs/COMPATIBILITY.md), [security policy](SECURITY.md), and [changelog](CHANGELOG.md) before adopting it for production controls.
 
 ## License
 
