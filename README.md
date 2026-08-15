@@ -75,7 +75,7 @@ xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm --fai
 
 ## GitHub Actions
 
-Use the bundled local action from a repository that contains XLSX-Ray, or pin a published release after this project is released.
+Pin the immutable `v0.1.0` release for strict reproducibility, or use the floating `v0` tag for the latest compatible v0 release.
 
 ```yaml
 name: Review workbook changes
@@ -106,7 +106,7 @@ jobs:
           fail-on: high
 ```
 
-The action writes an `xlsx-ray.md` report to the GitHub Job Summary and exposes Markdown/JSON report paths as outputs. A calling workflow can upload those paths as artifacts. It does not require write permissions or a hosted XLSX-Ray service. For a reusable local-action example before the first release, see [examples/github-actions/workbook-review.yml](examples/github-actions/workbook-review.yml).
+The action writes an `xlsx-ray.md` report to the GitHub Job Summary and exposes Markdown/JSON report paths as outputs. A calling workflow can upload those paths as artifacts. It does not require write permissions or a hosted XLSX-Ray service. See [examples/github-actions/workbook-review.yml](examples/github-actions/workbook-review.yml) for a reusable workflow example.
 
 ## Git textconv (optional)
 
@@ -138,7 +138,7 @@ XLSX-Ray was created from a public, evidence-backed OSS opportunity study. The c
 
 ## Project status
 
-**v0.1.0 release candidate (untagged and unpublished).** The supported surface is deliberately narrow. See the [compatibility matrix](docs/COMPATIBILITY.md), [security policy](SECURITY.md), and [changelog](CHANGELOG.md) before adopting it for production controls.
+**v0.1.0 is released on GitHub.** The supported surface is deliberately narrow. PyPI publication is still pending; until then, install from the repository checkout or the release artifacts. See the [compatibility matrix](docs/COMPATIBILITY.md), [security policy](SECURITY.md), and [changelog](CHANGELOG.md) before adopting it for production controls.
 
 ## License
 
