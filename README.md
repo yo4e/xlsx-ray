@@ -1,33 +1,140 @@
 # XLSX-Ray
 
-**Make Excel workbook changes reviewable.**
+**Turn opaque Excel binary changes into reviewable software artifacts.**
 
-XLSX-Ray is an experimental open-source tool for deterministic, read-only structural diffing and risk auditing of `.xlsx` / `.xlsm` workbooks.
+XLSX-Ray is a local, read-only CLI that compares `.xlsx` and `.xlsm` workbooks and emits deterministic evidence for code review and CI. It is built for teams that keep Excel workbooks in Git and need to distinguish an ordinary input edit from a formula rewrite, removed validation rule, new external link, protection change, defined-name change, or macro-bearing workbook.
 
-The project starts from a simple problem: Git can tell you that a workbook binary changed, but reviewers usually cannot see whether the meaningful change was a harmless value edit, a formula rewrite, a removed validation rule, a new external link, an unlocked sheet, or a macro-bearing workbook.
+> XLSX-Ray does **not** calculate formulas, execute VBA, open external links, upload files, or modify workbooks.
 
-The intended direction is a local CLI and GitHub Action that turns workbook changes into reviewable Markdown / JSON / SARIF-style evidence without uploading workbook contents to an external service.
+## What v0.1 reports
 
-## Initial product thesis
+| Review fact | What XLSX-Ray does |
+|---|---|
+| Worksheets | Finds additions, removals, and high-confidence renames. |
+| Cells and formulas | Reports value/formula changes; conservatively recognizes formatting-only formula edits. |
+| Defined names | Finds added, removed, and changed references. |
+| External links | Finds introduced and removed external link targets without following them. |
+| Data validation | Compares validation-rule facts and highlights removal/replacement. |
+| Protection | Compares workbook and worksheet protection attributes. |
+| VBA | Detects only whether `xl/vbaProject.bin` is present; never executes or parses macros. |
+| Formula impact | Lists direct textual A1-formula dependents of changed formulas. |
+| Risk | Applies fixed, explainable `low`, `medium`, and `high` rules suitable for CI. |
 
-The first useful version should focus on deterministic workbook facts rather than trying to become an Excel clone or an AI spreadsheet assistant.
+For the exact support matrix and limitations, read [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). For the design and safety boundary, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-Candidate v0.1 scope:
+## Install
 
-- sheet additions / removals;
-- cell value and formula changes;
-- normalized formula comparison where technically reliable;
-- defined-name changes;
-- external-link changes;
-- data-validation changes;
-- worksheet / workbook protection changes;
-- presence or removal of VBA content for `.xlsm`;
-- simple downstream-impact evidence for formula changes;
-- rule-based risk levels suitable for CI;
-- Markdown and JSON output, with SARIF / GitHub Action integration when practical.
+XLSX-Ray has no runtime dependencies beyond Python 3.10+.
 
-Explicit non-goals for the first version include full Excel recalculation, macro execution, proving mathematical correctness of formulas, replacing Excel/LibreOffice, cloud collaboration, and mandatory LLM/API usage.
+```bash
+python -m pip install xlsx-ray
+```
+
+Until the first PyPI publication, clone the repository and install from the checkout instead:
+
+```bash
+git clone https://github.com/yo4e/xlsx-ray.git
+cd xlsx-ray
+python -m pip install .
+```
+
+## Quick start
+
+```bash
+xlsx-ray diff before.xlsx after.xlsx
+xlsx-ray diff before.xlsx after.xlsx --format json
+xlsx-ray diff before.xlsx after.xlsx --fail-on high
+xlsx-ray audit workbook.xlsm
+```
+
+The default is Markdown intended for pull-request summaries. JSON is stable and machine-readable.
+
+```text
+# XLSX-Ray workbook diff
+
+- Before: `before.xlsx`
+- After: `after.xlsx`
+- Changes: 3
+- Highest risk: `high`
+
+| Risk | Category | Subject | Why it matters |
+| --- | --- | --- | --- |
+| `high` | `formula_changed` | `Model!B2` | A formula changed; formula results are not calculated by XLSX-Ray. |
+| `high` | `data_validation_changed` | `Inputs` | A data-validation rule was removed or replaced. |
+| `low` | `cell_value_changed` | `Inputs!A1` | A non-formula cell value changed. |
+```
+
+Generate synthetic, non-sensitive sample workbooks locally and try the command:
+
+```bash
+python examples/create_demo_workbooks.py
+xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm --fail-on high
+```
+
+`--fail-on high` exits `1` when a high-risk supported change is present; this is useful as a CI gate. An inspection failure exits `2` with an error message.
+
+## GitHub Actions
+
+Use the bundled local action from a repository that contains XLSX-Ray, or pin a published release after this project is released.
+
+```yaml
+name: Review workbook changes
+on:
+  pull_request:
+    paths:
+      - "**/*.xlsx"
+      - "**/*.xlsm"
+
+permissions:
+  contents: read
+
+jobs:
+  xlsx-ray:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: yo4e/xlsx-ray@v0
+        with:
+          old: models/budget.xlsx
+          new: models/budget.xlsx
+          fail-on: high
+```
+
+The action writes an `xlsx-ray.md` report to the GitHub Job Summary and exposes Markdown/JSON report paths as outputs. A calling workflow can upload those paths as artifacts. It does not require write permissions or a hosted XLSX-Ray service. For a reusable local-action example before the first release, see [examples/github-actions/workbook-review.yml](examples/github-actions/workbook-review.yml).
+
+## Git textconv (optional)
+
+XLSX-Ray complements, rather than replaces, a Git textconv. A textconv can show a broad textual workbook representation, while XLSX-Ray emphasizes structured facts and review risk. See [docs/GIT_INTEGRATION.md](docs/GIT_INTEGRATION.md) for a safe starting point.
+
+## Safety model
+
+The tool uses bounded, read-only ZIP/XML inspection. It rejects common unsafe archive/XML conditions, including unsafe member paths, archive/member size limits, suspicious compression ratios, malformed XML, and `DOCTYPE`/`ENTITY` declarations. These checks reduce common parser hazards but are **not** a sandbox. Treat untrusted workbooks according to your environment's security policy.
+
+XLSX-Ray never executes macros, evaluates formulas, starts Excel/LibreOffice, opens external links, uploads workbook contents, or changes the workbook under inspection.
+
+## Development
+
+```bash
+git clone https://github.com/yo4e/xlsx-ray.git
+cd xlsx-ray
+python -m pip install -e ".[dev]"
+python -m pytest -q
+ruff check .
+python -m build
+```
+
+The tests generate synthetic OOXML fixtures from code; no production workbook is used. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Why this project exists
+
+XLSX-Ray was created from a public, evidence-backed OSS opportunity study. The complete study, including 24 candidates, rankings, source URLs, and the direct-competitor analysis is preserved at [docs/OPPORTUNITY_RESEARCH_2026-08-15.md](docs/OPPORTUNITY_RESEARCH_2026-08-15.md). The refreshed implementation-time competitor check is in [docs/RESEARCH_REFRESH_NOTES.md](docs/RESEARCH_REFRESH_NOTES.md).
 
 ## Project status
 
-Research / implementation bootstrap. See `docs/PROJECT_BRIEF.md` and `docs/MANUS_BRIEF.md`.
+**v0.1.0-alpha.** The supported surface is deliberately narrow. See the [compatibility matrix](docs/COMPATIBILITY.md), [security policy](SECURITY.md), and [changelog](CHANGELOG.md) before adopting it for production controls.
+
+## License
+
+XLSX-Ray is licensed under the [MIT License](LICENSE).

@@ -1,0 +1,73 @@
+name: XLSX-Ray workbook review
+description: Create a deterministic, read-only XLSX-Ray diff report for two workbook paths.
+author: XLSX-Ray contributors
+branding:
+  icon: file-text
+  color: blue
+
+inputs:
+  old:
+    description: Baseline .xlsx or .xlsm path available in the checkout.
+    required: true
+  new:
+    description: Changed .xlsx or .xlsm path available in the checkout.
+    required: true
+  fail-on:
+    description: Exit with a failing status when a risk at or above this level is found. Use an empty value to report only.
+    required: false
+    default: high
+  report-directory:
+    description: Directory, relative to the workspace, in which Markdown and JSON reports are written.
+    required: false
+    default: .xlsx-ray
+
+outputs:
+  markdown-report:
+    description: Path to the generated Markdown report.
+    value: ${{ steps.xlsx-ray.outputs.markdown-report }}
+  json-report:
+    description: Path to the generated JSON report.
+    value: ${{ steps.xlsx-ray.outputs.json-report }}
+
+runs:
+  using: composite
+  steps:
+    - id: xlsx-ray
+      name: Inspect workbook changes
+      shell: bash
+      env:
+        INPUT_OLD: ${{ inputs.old }}
+        INPUT_NEW: ${{ inputs.new }}
+        INPUT_FAIL_ON: ${{ inputs.fail-on }}
+        INPUT_REPORT_DIRECTORY: ${{ inputs.report-directory }}
+      run: |
+        set -uo pipefail
+        python -m pip install --disable-pip-version-check "$GITHUB_ACTION_PATH"
+        report_dir="$GITHUB_WORKSPACE/$INPUT_REPORT_DIRECTORY"
+        mkdir -p "$report_dir"
+        markdown_report="$report_dir/xlsx-ray.md"
+        json_report="$report_dir/xlsx-ray.json"
+        threshold_args=()
+        if [ -n "$INPUT_FAIL_ON" ]; then
+          threshold_args=(--fail-on "$INPUT_FAIL_ON")
+        fi
+
+        set +e
+        xlsx-ray diff "$INPUT_OLD" "$INPUT_NEW" --format markdown --output "$markdown_report" "${threshold_args[@]}"
+        status=$?
+        xlsx-ray diff "$INPUT_OLD" "$INPUT_NEW" --format json --output "$json_report"
+        json_status=$?
+        set -e
+
+        if [ -f "$markdown_report" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
+          cat "$markdown_report" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        {
+          echo "markdown-report=$markdown_report"
+          echo "json-report=$json_report"
+        } >> "$GITHUB_OUTPUT"
+
+        if [ "$status" -ne 0 ]; then
+          exit "$status"
+        fi
+        exit "$json_status"
