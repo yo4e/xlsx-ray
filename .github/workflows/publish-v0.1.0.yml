@@ -1,0 +1,101 @@
+name: Publish XLSX-Ray v0.1.0
+
+on:
+  push:
+    branches:
+      - release/publish-v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_SHA: 7c533da941b69b1126c49cf33c5216168ac9980f
+      RELEASE_TAG: v0.1.0
+    steps:
+      - name: Check out release commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.TARGET_SHA }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Build and validate distributions
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip build twine
+          rm -rf dist build src/*.egg-info
+          python -m build
+          python -m twine check dist/*
+
+      - name: Create immutable release tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main --tags
+
+          if git show-ref --verify --quiet "refs/tags/${RELEASE_TAG}"; then
+            existing="$(git rev-parse "${RELEASE_TAG}^{commit}")"
+            if [ "${existing}" != "${TARGET_SHA}" ]; then
+              echo "${RELEASE_TAG} already points to ${existing}, expected ${TARGET_SHA}" >&2
+              exit 1
+            fi
+          else
+            git tag -a "${RELEASE_TAG}" "${TARGET_SHA}" -m "XLSX-Ray 0.1.0"
+            git push origin "refs/tags/${RELEASE_TAG}"
+          fi
+
+          cat > /tmp/release-notes.md <<'EOF'
+          # XLSX-Ray v0.1.0
+
+          First public alpha release of XLSX-Ray: a local, read-only CLI that turns opaque `.xlsx` / `.xlsm` changes into deterministic, explainable review evidence for Git and CI.
+
+          ## Highlights
+
+          - Worksheet add/remove and high-confidence rename evidence.
+          - Raw cell value and formula-text diffs without recalculation.
+          - Defined-name, external-link, data-validation, and protection facts.
+          - VBA package presence detection without parsing or execution.
+          - Direct A1 formula-impact evidence for reviewer leads.
+          - Markdown and JSON reports with explainable low/medium/high risk rules.
+          - `--fail-on` thresholds for CI and a composite GitHub Action.
+          - Bounded ZIP/XML parsing with adversarial fixture coverage.
+
+          ## Safety boundary
+
+          XLSX-Ray never executes VBA, evaluates formulas, starts Excel/LibreOffice, follows external links, uploads workbook contents, or mutates inspected files. Parser limits are defense in depth, not a sandbox.
+
+          ## Validation
+
+          The release candidate passed the Python 3.10/3.11/3.12 test matrix, composite-Action integration, lint/format checks, package build and metadata checks, clean wheel installation, CLI exit-code checks, and realistic/adversarial fixture tests.
+
+          See `docs/COMPATIBILITY.md`, `docs/ARCHITECTURE.md`, `SECURITY.md`, and `docs/IMPLEMENTATION_REVIEW_2026-08-15.md` for exact scope and limitations.
+          EOF
+
+          if gh release view "${RELEASE_TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "GitHub Release ${RELEASE_TAG} already exists; leaving it unchanged."
+          else
+            gh release create "${RELEASE_TAG}" dist/* \
+              --repo "${GITHUB_REPOSITORY}" \
+              --verify-tag \
+              --title "XLSX-Ray v0.1.0" \
+              --notes-file /tmp/release-notes.md
+          fi
+
+      - name: Publish floating v0 GitHub Action tag
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin --tags
+          git tag -fa v0 "${TARGET_SHA}" -m "XLSX-Ray v0 action tag"
+          git push origin refs/tags/v0 --force
