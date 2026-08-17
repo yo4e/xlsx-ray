@@ -45,7 +45,10 @@ def main() -> None:
             SheetSpec(
                 name="Model",
                 part="xl/worksheets/sheet2.xml",
-                cells={"B2": ("20", "=Inputs!A1*2", None), "C2": ("21", "=B2+1", None)},
+                cells={
+                    "B2": ("20", "=Inputs!A1*2", None),
+                    "C2": ("11", "=InputLimit+1", None),
+                },
             ),
         ],
         defined_names=[("InputLimit", "Inputs!$A$1", None)],
@@ -62,7 +65,10 @@ def main() -> None:
             SheetSpec(
                 name="Model",
                 part="xl/worksheets/sheet2.xml",
-                cells={"B2": ("24", "=Assumptions!A1*2", None), "C2": ("25", "=B2+1", None)},
+                cells={
+                    "B2": ("24", "=Assumptions!A1*2", None),
+                    "C2": ("13", "=InputLimit+1", None),
+                },
             ),
         ],
         defined_names=[("InputLimit", "Assumptions!$A$1", None)],

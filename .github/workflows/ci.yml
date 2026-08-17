@@ -70,3 +70,5 @@ jobs:
           test -s .xlsx-ray/action-integration/xlsx-ray.json
           python -m json.tool .xlsx-ray/action-integration/xlsx-ray.json >/dev/null
           grep -F "# XLSX-Ray workbook diff" .xlsx-ray/action-integration/xlsx-ray.md
+          grep -F "defined_name" .xlsx-ray/action-integration/xlsx-ray.md
+          grep -F '"kind": "defined_name"' .xlsx-ray/action-integration/xlsx-ray.json

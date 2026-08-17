@@ -46,6 +46,7 @@ class WorksheetFact:
     cells: dict[str, CellFact] = field(default_factory=dict)
     data_validations: tuple[str, ...] = ()
     protection: dict[str, str] = field(default_factory=dict)
+    local_sheet_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,26 @@ class WorkbookFact:
 
 
 @dataclass(frozen=True)
+class ImpactEvidence:
+    """A deterministic, evidence-only reason to review a formula cell."""
+
+    formula_cell: str
+    kind: str
+    reference: str
+    resolved_range: str | None
+    reason: str
+
+    def to_dict(self) -> dict[str, str | None]:
+        return {
+            "formula_cell": self.formula_cell,
+            "kind": self.kind,
+            "reference": self.reference,
+            "resolved_range": self.resolved_range,
+            "reason": self.reason,
+        }
+
+
+@dataclass(frozen=True)
 class Change:
     category: str
     subject: str
@@ -76,11 +97,13 @@ class Change:
     risk: RiskLevel
     reason: str
     impact: tuple[str, ...] = ()
+    impact_evidence: tuple[ImpactEvidence, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
         data["risk"] = self.risk.label
         data["impact"] = list(self.impact)
+        data["impact_evidence"] = [evidence.to_dict() for evidence in self.impact_evidence]
         return data
 
 
@@ -103,7 +126,7 @@ class DiffResult:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "schema_version": "0.1",
+            "schema_version": "0.2",
             "old_source": self.old_source,
             "new_source": self.new_source,
             "summary": {

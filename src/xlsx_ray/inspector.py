@@ -258,7 +258,11 @@ def _cell_value(
 
 
 def _worksheet_fact(
-    reader: _OOXMLReader, name: str, part_name: str, shared_strings: list[str]
+    reader: _OOXMLReader,
+    name: str,
+    part_name: str,
+    local_sheet_id: str,
+    shared_strings: list[str],
 ) -> WorksheetFact:
     root = reader.xml(part_name)
     if root.tag != _expected_tag(SPREADSHEET_NS, "worksheet"):
@@ -288,6 +292,7 @@ def _worksheet_fact(
     return WorksheetFact(
         name=name,
         part_name=part_name,
+        local_sheet_id=local_sheet_id,
         cells=dict(sorted(cells.items())),
         data_validations=validations,
         protection=protection_facts,
@@ -333,7 +338,7 @@ def inspect_workbook(source: str | Path) -> WorkbookFact:
         shared_strings = _shared_strings(reader)
         workbook_rels = _relationships(reader, "xl/workbook.xml")
         sheets: dict[str, WorksheetFact] = {}
-        for sheet in workbook.findall("x:sheets/x:sheet", NS):
+        for sheet_index, sheet in enumerate(workbook.findall("x:sheets/x:sheet", NS)):
             name = sheet.get("name")
             relation_id = sheet.get(f"{{{RELATIONSHIP_NS}}}id")
             relation = workbook_rels.get(relation_id or "")
@@ -350,7 +355,9 @@ def inspect_workbook(source: str | Path) -> WorkbookFact:
                 raise WorkbookInspectionError(
                     f"unsafe worksheet relationship target for sheet: {name}"
                 )
-            sheets[name] = _worksheet_fact(reader, name, part_name, shared_strings)
+            sheets[name] = _worksheet_fact(
+                reader, name, part_name, str(sheet_index), shared_strings
+            )
 
         defined_names: dict[tuple[str, str | None], DefinedNameFact] = {}
         for node in workbook.findall("x:definedNames/x:definedName", NS):
@@ -380,7 +387,16 @@ def inspect_workbook(source: str | Path) -> WorkbookFact:
         return WorkbookFact(
             source=str(Path(source)),
             sheets=dict(sorted(sheets.items())),
-            defined_names=dict(sorted(defined_names.items())),
+            defined_names=dict(
+                sorted(
+                    defined_names.items(),
+                    key=lambda item: (
+                        item[0][0].casefold(),
+                        item[0][1] is not None,
+                        item[0][1] or "",
+                    ),
+                )
+            ),
             external_links=_external_link_targets(reader, workbook_rels, warnings),
             workbook_protection=_canonical_attributes(workbook_protection)
             if workbook_protection is not None
