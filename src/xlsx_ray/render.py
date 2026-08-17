@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from .models import AuditResult, Change, DiffResult
+from .models import AuditResult, Change, DiffResult, ImpactEvidence
 
 
 def json_output(payload: dict[str, Any]) -> str:
@@ -21,8 +21,15 @@ def _fence(value: Any) -> str:
     return f"`{text}`"
 
 
+def _evidence_markdown(evidence: ImpactEvidence) -> str:
+    resolved = f" → `{evidence.resolved_range}`" if evidence.resolved_range else ""
+    return f"`{evidence.formula_cell}` — `{evidence.kind}` via `{evidence.reference}`{resolved}"
+
+
 def _change_row(change: Change) -> str:
-    impact = ", ".join(f"`{item}`" for item in change.impact) if change.impact else "—"
+    evidence = "<br>".join(_evidence_markdown(item) for item in change.impact_evidence)
+    if not evidence:
+        evidence = "—"
     return " | ".join(
         [
             f"`{change.risk.label}`",
@@ -31,13 +38,13 @@ def _change_row(change: Change) -> str:
             _fence(change.before),
             _fence(change.after),
             change.reason,
-            impact,
+            evidence,
         ]
     )
 
 
 def render_diff_markdown(result: DiffResult) -> str:
-    """Render an intentionally concise report suitable for a PR summary."""
+    """Render a concise, deterministic report suitable for PR summaries."""
 
     highest = result.highest_risk.label if result.highest_risk else "none"
     lines = [
@@ -48,7 +55,7 @@ def render_diff_markdown(result: DiffResult) -> str:
         f"- **Changes:** {len(result.changes)}",
         f"- **Highest risk:** `{highest}`",
         "",
-        "| Risk | Category | Subject | Before | After | Why it matters | Direct formula dependents |",
+        "| Risk | Category | Subject | Before | After | Why it matters | Formula impact leads (Direct formula dependents and static evidence) |",
         "| --- | --- | --- | --- | --- | --- | --- |",
     ]
     if result.changes:
@@ -63,7 +70,9 @@ def render_diff_markdown(result: DiffResult) -> str:
     lines.extend(
         [
             "",
-            "> XLSX-Ray is read-only and does not calculate formulas, execute VBA, or follow external links. Direct formula dependents are textual references only.",
+            "> XLSX-Ray is read-only and does not calculate formulas, execute VBA, or follow "
+            "external links. Formula impact leads are static, evidence-only review hints; they "
+            "are not a complete dependency graph or calculated-outcome claim.",
             "",
         ]
     )

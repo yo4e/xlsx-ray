@@ -9,12 +9,13 @@
 | Sheet rename | Yes | Yes | Reported only when the OOXML worksheet part path is retained and the mapping is unambiguous. |
 | Cell values | Yes | Yes | Text, inline string, shared string, and raw stored values are compared. Display formatting is not calculated. |
 | Formula text | Yes | Yes | Formula text is compared; results are never recalculated. Only function-name casing outside string literals is normalized, and all whitespace is preserved. |
+| Formula impact evidence | Yes | Yes | Direct A1, static A1 range overlap, and safely resolved static defined-name leads are reported as deterministic review evidence only. |
 | Defined names | Yes | Yes | Workbook- and local-sheet-scoped names are compared as text references. |
 | External links | Yes | Yes | Relationship targets are compared but never opened. |
 | Data-validation facts | Yes | Yes | Canonical rule XML is compared; validation logic is not evaluated. |
 | Workbook/worksheet protection facts | Yes | Yes | Attributes are compared; this is not a claim that protection is strong security. |
 | VBA presence | N/A | Yes | Only `xl/vbaProject.bin` presence is reported. Macro code is never executed or parsed. |
-| Markdown / JSON reports | Yes | Yes | Deterministic ordering is used for supported facts. |
+| Markdown / JSON reports | Yes | Yes | Deterministic ordering is used for supported facts. Diff JSON schema `0.2` adds provenance-rich `impact_evidence` while retaining `impact`. |
 | `--fail-on` CI threshold | Yes | Yes | Fails on a supported change/finding at or above the supplied level. |
 
 ## Known limitations
@@ -22,7 +23,7 @@
 | Area | v0.1 behavior |
 |---|---|
 | Formula semantics | XLSX-Ray does not calculate formulas or prove equivalence. It normalizes only function-name casing outside string literals; it preserves whitespace because whitespace can be meaningful in Excel. |
-| Formula references | Direct A1 references outside string literals are indexed as review evidence; absolute markers, casing, and quoted sheet names are normalized for correlation. Named references, structured references, 3D references, `INDIRECT`, spill ranges, external workbooks, and indirect dependencies are not resolved. |
+| Formula references | Direct A1 references outside string literals are indexed as review evidence; absolute markers, casing, and quoted sheet names are normalized for correlation. Static A1 range overlap is supported only for an inclusive range on the matching sheet. Workbook/local defined names are supported only when active scope resolves unambiguously and the entire definition is one explicitly sheet-qualified static A1 cell/range. Local scope shadows workbook scope only for that local sheet. Relative names, multi-area/formula-defined names, structured references, 3D references, `INDIRECT`, spill ranges, external workbooks, and indirect dependencies are not resolved. |
 | Cached formula values | Cached values for an unchanged formula are ignored, because v0.1 does not calculate formula results. |
 | Styles and formatting | Cell styles, conditional formatting semantics, drawing/layout changes, row heights, and column widths are not a supported semantic diff surface. |
 | Charts / pivot tables / slicers | Presence may be reported as unsupported. Their definitions and outputs are not compared. |

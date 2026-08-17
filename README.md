@@ -17,7 +17,7 @@ XLSX-Ray is a local, read-only CLI that compares `.xlsx` and `.xlsm` workbooks a
 | Data validation | Compares validation-rule facts and highlights removal/replacement. |
 | Protection | Compares workbook and worksheet protection attributes. |
 | VBA | Detects only whether `xl/vbaProject.bin` is present; never executes or parses macros. |
-| Formula impact | Lists direct textual A1-formula dependents of changed formulas. |
+| Formula impact | Lists deterministic review leads from direct A1 cells, static A1 range overlap, and safely resolved static defined names. |
 | Risk | Applies fixed, explainable `low`, `medium`, and `high` rules suitable for CI. |
 
 For the exact support matrix and limitations, read [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md). For the design and safety boundary, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -47,7 +47,7 @@ xlsx-ray diff before.xlsx after.xlsx --fail-on high
 xlsx-ray audit workbook.xlsm
 ```
 
-The default is Markdown intended for pull-request summaries. JSON is stable and machine-readable.
+The default is Markdown intended for pull-request summaries. JSON is stable and machine-readable; the current diff schema version is `0.2`, which adds provenance-rich `impact_evidence` while retaining the legacy flat `impact` formula-cell list.
 
 ```text
 # XLSX-Ray workbook diff
@@ -116,7 +116,7 @@ XLSX-Ray complements, rather than replaces, a Git textconv. A textconv can show 
 
 The tool uses bounded, read-only ZIP/XML inspection. It rejects duplicate or unsafe member paths, archive/member size limits, suspicious compression ratios, malformed or unexpected-namespace XML, `DOCTYPE`/`ENTITY` declarations, overly deep XML, and unsafe worksheet relationship targets. These checks reduce common parser hazards but are **not** a sandbox. Treat untrusted workbooks according to your environment's security policy.
 
-XLSX-Ray never executes macros, evaluates formulas, starts Excel/LibreOffice, opens external links, uploads workbook contents, or changes the workbook under inspection.
+XLSX-Ray never executes macros, evaluates formulas, starts Excel/LibreOffice, opens external links, uploads workbook contents, or changes the workbook under inspection. Formula impact leads are **static, evidence-only review hints** rather than a complete dependency graph or a claim about calculated outcomes. Supported leads cover direct A1 references, static A1 range overlap, and workbook/local defined names only when the active scope and one sheet-qualified static A1 target can be determined safely.
 
 ## Development
 

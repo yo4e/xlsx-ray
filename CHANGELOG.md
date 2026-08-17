@@ -4,6 +4,17 @@ All notable changes to XLSX-Ray are documented here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- Evidence-only formula impact leads for static A1 range overlap and safely resolved workbook/local defined names.
+- Provenance-rich `impact_evidence` records in diff JSON schema `0.2`, while preserving the existing flat `impact` formula-cell list.
+- Reproducible fixture-study record and regression coverage for local-name shadowing, quoted sheets, range containment, false-positive prevention, deterministic ordering, and an `openpyxl`-generated defined-name workbook.
+
+### Changed
+
+- Markdown diff output now labels direct dependents and new range/name reviewer leads as explicit static evidence rather than a dependency graph.
+- Worksheet facts retain OOXML sheet-order `localSheetId` so local names can be resolved only in their active formula-sheet scope.
+
 ## [0.1.0] - 2026-08-15
 
 ### Added

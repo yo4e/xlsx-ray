@@ -59,7 +59,11 @@ Risk is not a black-box score. Each change is assigned a fixed level and textual
 
 ### Formula impact evidence
 
-For a changed formula cell, XLSX-Ray reports direct cells whose formula text contains an A1 reference to that cell. The index excludes string literals and correlates direct A1 references case-insensitively while ignoring `$` absolute markers; quoted sheet names are supported. This is still **textual review evidence**, not an Excel dependency engine. It does not resolve named references, structured references, 3D references, `INDIRECT`, dynamic arrays, external workbook references, or formulas on a sheet that was renamed with unrewritten cross-sheet references.
+For each changed cell or supported defined-name fact, XLSX-Ray can report static **review leads** with an `impact_evidence` record. The record identifies the flagged formula cell, evidence kind, original formula/name spelling, statically resolved range where applicable, and explicit evidence-only wording. The legacy flat `impact` formula-cell list remains available for compatibility; diff JSON schema `0.2` adds the provenance-rich records deliberately.
+
+Direct A1 references exclude string literals and correlate case-insensitively while ignoring `$` absolute markers; quoted sheet names are supported. A static A1 range emits `range_overlap` only when the changed cell falls inside its inclusive row/column bounds on the matching sheet. A defined-name lead is emitted only if an unqualified formula token resolves unambiguously in the formula cell's active local-sheet scope first, then workbook scope, and that definition is exactly one explicitly sheet-qualified static A1 cell/range. Local names on another sheet do not participate.
+
+This is **static review evidence**, not an Excel dependency engine. XLSX-Ray does not resolve relative names, multi-area or formula-defined names, structured references, 3D references, `INDIRECT`, dynamic arrays/spill syntax, external-workbook names, or formulas on a sheet that was renamed with unrewritten cross-sheet references. Unsupported syntax is intentionally omitted rather than partially interpreted.
 
 ## Safety boundary
 
