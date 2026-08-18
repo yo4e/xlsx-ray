@@ -47,7 +47,9 @@ xlsx-ray diff before.xlsx after.xlsx --fail-on high
 xlsx-ray audit workbook.xlsm
 ```
 
-The default is Markdown intended for pull-request summaries. JSON is stable and machine-readable; the current diff schema version is `0.2`, which adds provenance-rich `impact_evidence` while retaining the legacy flat `impact` formula-cell list.
+The default is Markdown intended for pull-request summaries. JSON is stable and machine-readable; the current diff schema version is `0.2`, which adds provenance-rich `impact_evidence` while retaining the legacy flat `impact` formula-cell list. The audit schema remains `0.1`.
+
+Versioned JSON Schema files ship with the package at `xlsx_ray/schemas/diff-0.2.schema.json` and `xlsx_ray/schemas/audit-0.1.schema.json` (source paths: `src/xlsx_ray/schemas/`). Machine consumers should check `schema_version` and validate against the matching schema instead of assuming an unversioned shape. XLSX-Ray does not currently emit SARIF.
 
 ```text
 # XLSX-Ray workbook diff
