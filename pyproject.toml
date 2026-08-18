@@ -30,6 +30,7 @@ dependencies = []
 [project.optional-dependencies]
 dev = [
   "build>=1.0",
+  "jsonschema>=4.23",
   "openpyxl>=3.1",
   "pytest>=8.0",
   "ruff>=0.6",
@@ -49,6 +50,9 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+xlsx_ray = ["schemas/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
