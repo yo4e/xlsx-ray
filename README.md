@@ -52,6 +52,16 @@ The default is Markdown intended for pull-request summaries. JSON is stable and 
 
 Versioned JSON Schema files ship with the package at `xlsx_ray/schemas/diff-0.2.schema.json` and `xlsx_ray/schemas/audit-0.1.schema.json` (source paths: `src/xlsx_ray/schemas/`). Machine consumers should check `schema_version` and validate against the matching schema instead of assuming an unversioned shape. XLSX-Ray does not currently emit SARIF.
 
+### Exit codes
+
+| Code | Meaning |
+|---|---|
+| `0` | Inspection and report generation succeeded, and no configured `--fail-on` threshold was met. |
+| `1` | Inspection and report generation succeeded, but a supported change/finding met or exceeded the configured `--fail-on` threshold. |
+| `2` | A handled CLI or workbook-inspection error occurred, such as invalid arguments or an invalid/unsafe workbook package. Do not assume a normal report was produced. |
+
+Other non-zero statuses are not part of the handled CLI contract and may indicate an unexpected runtime/environment failure. XLSX-Ray currently has no separate progress/debug logging stream: normal findings and warnings belong in the report, while handled CLI/inspection errors are written by the argument parser to stderr. For that reason, `--verbose` / `--quiet` flags are intentionally not exposed until there is meaningful diagnostic logging to control.
+
 ```text
 # XLSX-Ray workbook diff
 
