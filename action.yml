@@ -53,10 +53,8 @@ runs:
         fi
 
         set +e
-        xlsx-ray diff "$INPUT_OLD" "$INPUT_NEW" --format markdown --output "$markdown_report" "${threshold_args[@]}"
+        xlsx-ray diff "$INPUT_OLD" "$INPUT_NEW" --format markdown --output "$markdown_report" --json-output "$json_report" "${threshold_args[@]}"
         status=$?
-        xlsx-ray diff "$INPUT_OLD" "$INPUT_NEW" --format json --output "$json_report"
-        json_status=$?
         set -e
 
         if [ -f "$markdown_report" ] && [ -n "${GITHUB_STEP_SUMMARY:-}" ]; then
@@ -67,7 +65,4 @@ runs:
           echo "json-report=$json_report"
         } >> "$GITHUB_OUTPUT"
 
-        if [ "$status" -ne 0 ]; then
-          exit "$status"
-        fi
-        exit "$json_status"
+        exit "$status"
