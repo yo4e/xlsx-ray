@@ -30,6 +30,11 @@ def _parser() -> argparse.ArgumentParser:
     diff.add_argument("--format", choices=("markdown", "json"), default="markdown")
     diff.add_argument("--output", type=Path, help="write the report to a file instead of stdout")
     diff.add_argument(
+        "--json-output",
+        type=Path,
+        help="also write the same inspection result as JSON without re-reading the workbooks",
+    )
+    diff.add_argument(
         "--fail-on",
         choices=tuple(level.label for level in RiskLevel),
         help="exit with status 1 when a change at or above this risk is found",
@@ -39,6 +44,11 @@ def _parser() -> argparse.ArgumentParser:
     audit.add_argument("workbook", help="workbook to inspect")
     audit.add_argument("--format", choices=("markdown", "json"), default="markdown")
     audit.add_argument("--output", type=Path, help="write the report to a file instead of stdout")
+    audit.add_argument(
+        "--json-output",
+        type=Path,
+        help="also write the same inspection result as JSON without re-reading the workbook",
+    )
     audit.add_argument(
         "--fail-on",
         choices=tuple(level.label for level in RiskLevel),
@@ -90,17 +100,24 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(str(exc))
         return 2
 
+    if (
+        args.format == "markdown"
+        and args.output is not None
+        and args.json_output is not None
+        and args.output == args.json_output
+    ):
+        parser.error("--output and --json-output must be different paths for Markdown output")
+
+    json_report = json_output(result.to_dict())
     if isinstance(result, DiffResult):
-        output = (
-            json_output(result.to_dict()) if args.format == "json" else render_diff_markdown(result)
-        )
+        output = json_report if args.format == "json" else render_diff_markdown(result)
     else:
-        output = (
-            json_output(result.to_dict())
-            if args.format == "json"
-            else render_audit_markdown(result)
-        )
+        output = json_report if args.format == "json" else render_audit_markdown(result)
     _write(output, args.output)
+    if args.json_output is not None and not (
+        args.format == "json" and args.output == args.json_output
+    ):
+        _write(json_report, args.json_output)
     return 1 if _should_fail(result, args.fail_on) else 0
 
 
