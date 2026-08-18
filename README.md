@@ -44,10 +44,11 @@ python -m pip install .
 xlsx-ray diff before.xlsx after.xlsx
 xlsx-ray diff before.xlsx after.xlsx --format json
 xlsx-ray diff before.xlsx after.xlsx --fail-on high
+xlsx-ray diff before.xlsx after.xlsx --output report.md --json-output report.json
 xlsx-ray audit workbook.xlsm
 ```
 
-The default is Markdown intended for pull-request summaries. JSON is stable and machine-readable; the current diff schema version is `0.2`, which adds provenance-rich `impact_evidence` while retaining the legacy flat `impact` formula-cell list. The audit schema remains `0.1`.
+The default is Markdown intended for pull-request summaries. JSON is stable and machine-readable; the current diff schema version is `0.2`, which adds provenance-rich `impact_evidence` while retaining the legacy flat `impact` formula-cell list. The audit schema remains `0.1`. `--json-output` writes a secondary JSON report from the same in-memory inspection result, so callers that need both formats do not have to read and compare the workbook twice.
 
 Versioned JSON Schema files ship with the package at `xlsx_ray/schemas/diff-0.2.schema.json` and `xlsx_ray/schemas/audit-0.1.schema.json` (source paths: `src/xlsx_ray/schemas/`). Machine consumers should check `schema_version` and validate against the matching schema instead of assuming an unversioned shape. XLSX-Ray does not currently emit SARIF.
 
@@ -108,7 +109,7 @@ jobs:
           fail-on: high
 ```
 
-The action writes an `xlsx-ray.md` report to the GitHub Job Summary and exposes Markdown/JSON report paths as outputs. A calling workflow can upload those paths as artifacts. It does not require write permissions or a hosted XLSX-Ray service. See [examples/github-actions/workbook-review.yml](examples/github-actions/workbook-review.yml) for a reusable workflow example.
+The action writes an `xlsx-ray.md` report to the GitHub Job Summary and exposes Markdown/JSON report paths as outputs. Both reports are rendered from one workbook-inspection/diff pass. A calling workflow can upload those paths as artifacts. It does not require write permissions or a hosted XLSX-Ray service. See [examples/github-actions/workbook-review.yml](examples/github-actions/workbook-review.yml) for a reusable workflow example.
 
 ## Git textconv (optional)
 
