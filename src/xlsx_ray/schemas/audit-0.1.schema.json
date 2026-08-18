@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "XLSX-Ray audit output 0.1",
+  "description": "Machine-readable contract for XLSX-Ray audit JSON.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "source", "summary", "findings", "warnings"],
+  "properties": {
+    "schema_version": {"const": "0.1"},
+    "source": {"type": "string"},
+    "summary": {"$ref": "#/$defs/summary"},
+    "findings": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/finding"}
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "$defs": {
+    "risk": {
+      "enum": ["low", "medium", "high"]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["finding_count", "highest_risk"],
+      "properties": {
+        "finding_count": {"type": "integer", "minimum": 0},
+        "highest_risk": {
+          "anyOf": [
+            {"$ref": "#/$defs/risk"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["category", "subject", "risk", "reason", "evidence"],
+      "properties": {
+        "category": {"type": "string"},
+        "subject": {"type": "string"},
+        "risk": {"$ref": "#/$defs/risk"},
+        "reason": {"type": "string"},
+        "evidence": {}
+      }
+    }
+  }
+}
