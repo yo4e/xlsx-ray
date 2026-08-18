@@ -9,6 +9,7 @@ All notable changes to XLSX-Ray are documented here. The format follows [Keep a 
 - Evidence-only formula impact leads for static A1 range overlap and safely resolved workbook/local defined names.
 - Provenance-rich `impact_evidence` records in diff JSON schema `0.2`, while preserving the existing flat `impact` formula-cell list.
 - Reproducible fixture-study record and regression coverage for local-name shadowing, quoted sheets, range containment, false-positive prevention, deterministic ordering, and an `openpyxl`-generated defined-name workbook.
+- Versioned JSON Schema contracts for diff `0.2` and audit `0.1`, shipped in the Python package and validated against representative model output in CI.
 
 ### Changed
 
