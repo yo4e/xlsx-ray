@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "XLSX-Ray diff output 0.2",
+  "description": "Machine-readable contract for XLSX-Ray diff JSON with provenance-rich impact evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "old_source",
+    "new_source",
+    "summary",
+    "changes",
+    "warnings"
+  ],
+  "properties": {
+    "schema_version": {"const": "0.2"},
+    "old_source": {"type": "string"},
+    "new_source": {"type": "string"},
+    "summary": {"$ref": "#/$defs/summary"},
+    "changes": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/change"}
+    },
+    "warnings": {
+      "type": "array",
+      "items": {"type": "string"}
+    }
+  },
+  "$defs": {
+    "risk": {
+      "enum": ["low", "medium", "high"]
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["change_count", "highest_risk", "risk_counts"],
+      "properties": {
+        "change_count": {"type": "integer", "minimum": 0},
+        "highest_risk": {
+          "anyOf": [
+            {"$ref": "#/$defs/risk"},
+            {"type": "null"}
+          ]
+        },
+        "risk_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["low", "medium", "high"],
+          "properties": {
+            "low": {"type": "integer", "minimum": 0},
+            "medium": {"type": "integer", "minimum": 0},
+            "high": {"type": "integer", "minimum": 0}
+          }
+        }
+      }
+    },
+    "impact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["formula_cell", "kind", "reference", "resolved_range", "reason"],
+      "properties": {
+        "formula_cell": {"type": "string"},
+        "kind": {
+          "enum": ["direct_a1", "range_overlap", "defined_name"]
+        },
+        "reference": {"type": "string"},
+        "resolved_range": {
+          "type": ["string", "null"]
+        },
+        "reason": {"type": "string"}
+      }
+    },
+    "change": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "category",
+        "subject",
+        "before",
+        "after",
+        "risk",
+        "reason",
+        "impact",
+        "impact_evidence"
+      ],
+      "properties": {
+        "category": {"type": "string"},
+        "subject": {"type": "string"},
+        "before": {},
+        "after": {},
+        "risk": {"$ref": "#/$defs/risk"},
+        "reason": {"type": "string"},
+        "impact": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "impact_evidence": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/impact_evidence"}
+        }
+      }
+    }
+  }
+}
