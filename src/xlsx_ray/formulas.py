@@ -120,7 +120,6 @@ def normalize_formula(formula: str | None) -> str | None:
 
     if formula is None:
         return None
-    formula = formula.strip()
     if not formula:
         return formula
 
