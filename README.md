@@ -6,6 +6,22 @@ XLSX-Ray is a local, read-only CLI that compares `.xlsx` and `.xlsm` workbooks a
 
 > XLSX-Ray does **not** calculate formulas, execute VBA, open external links, upload files, or modify workbooks.
 
+## Why XLSX-Ray
+
+A normal Git review can tell you that an Excel binary changed. It usually cannot tell you **what kind of workbook logic changed** or whether that change deserves extra review.
+
+XLSX-Ray turns supported workbook changes into explicit review evidence:
+
+```text
+Git:      Binary files before.xlsx and after.xlsx differ
+
+XLSX-Ray: formula_changed          Model!B2        high
+          data_validation_changed  Inputs          high
+          cell_value_changed       Inputs!A1       low
+```
+
+That distinction matters when spreadsheets contain operational or analytical logic. XLSX-Ray is designed to make those changes visible in the same review and CI workflows teams already use for source code — without turning the tool into an Excel calculation engine.
+
 ## What v0.1 reports
 
 | Review fact | What XLSX-Ray does |
