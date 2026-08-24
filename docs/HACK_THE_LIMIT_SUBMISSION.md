@@ -26,7 +26,7 @@ The software itself is submission-ready. XLSX-Ray already has:
 - synthetic demo workbook generation;
 - tests, packaging, security, architecture, compatibility, release, and contribution documentation.
 
-The main remaining submission work is presentation: at least one required project file (screenshot, video, or equivalent), plus a concise Devpost description and demo flow.
+The functional demo flow and required hero screenshot were validated on 2026-08-24. The remaining submission work is human-owned Devpost entry, eligibility/deadline confirmation, and uploading the prepared screenshot. Video/GIF production is optional and should be attempted only when capture/editing credits are comfortably available.
 
 ## Recommended title and one-line pitch
 
@@ -116,13 +116,51 @@ Do not spend the final submission pass adding speculative features merely to inc
 
 Devpost requires at least one screenshot, video, or file showing project functionality or design.
 
-Recommended minimum submission set:
+Required minimum submission set:
 
-1. **Hero screenshot** — Git or GitHub can only show an opaque workbook change, while XLSX-Ray shows a structured report with a high-risk formula or validation change.
-2. **45–60 second demo video or GIF** — generate the included synthetic workbooks, run `xlsx-ray diff`, show the report, then show the same workflow through the GitHub Action if practical.
-3. **Repository link** — https://github.com/yo4e/xlsx-ray
+1. **Hero screenshot** — use [`docs/assets/hack-the-limit/xlsx-ray-hero.png`](assets/hack-the-limit/xlsx-ray-hero.png), which combines the real generated CLI report with a minimal Git binary-diff cue.
+2. **Repository link** — https://github.com/yo4e/xlsx-ray
 
-A single excellent screenshot satisfies the mandatory project-file requirement; a short video materially improves the Presentation and UX story.
+A single excellent screenshot satisfies the mandatory project-file requirement. A 45–60 second demo video or GIF can improve the Presentation and UX story, but it is an optional stretch asset: do not spend substantial generation/editing credits on it at the expense of the validated screenshot and functional evidence.
+
+## Validated demo assets and completion record
+
+Validated on 2026-08-24 from a clean checkout using a new Python 3.12.13 virtual environment:
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install .
+```
+
+The repository install completed with no runtime dependencies beyond the declared Python requirement. The documented commands then produced these exact statuses:
+
+| Command | Exit code | Verified behavior |
+|---|---:|---|
+| `python examples/create_demo_workbooks.py` | `0` | Wrote `examples/generated/before.xlsx` and `examples/generated/after.xlsm`. |
+| `xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm` | `0` | Wrote a complete nine-finding Markdown report with highest risk `high`. |
+| `xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm --fail-on high` | `1` | Printed the same complete report, then applied the documented CI threshold status. |
+
+The convenience command `./examples/demo.sh` orchestrates those same commands and verifies that the threshold invocation exits `1`; it does not change product semantics.
+
+Repository verification after adding the assets and convenience script:
+
+- `python -m pytest -q` — 43 passed;
+- `ruff check .` — passed;
+- `ruff format --check .` — 35 files already formatted;
+- `python -m build` — sdist and wheel built successfully;
+- `python -m twine check dist/*` — both distributions passed;
+- the sdist content check confirms `examples/demo.sh` is packaged.
+
+Produced evidence:
+
+- **Upload-ready hero screenshot:** [`docs/assets/hack-the-limit/xlsx-ray-hero.png`](assets/hack-the-limit/xlsx-ray-hero.png), 1920×1080 PNG.
+- **Raw product output behind the screenshot:** [`docs/assets/hack-the-limit/demo-output.md`](assets/hack-the-limit/demo-output.md).
+- **Real GitHub Action proof:** [CI run 22](https://github.com/yo4e/xlsx-ray/actions/runs/32690169227), including the successful [Exercise composite Action job](https://github.com/yo4e/xlsx-ray/actions/runs/32690169227/job/97322285153).
+
+The generator constructs both OOXML packages from repository fixture code. Their cells, defined names, protection facts, validation facts, `example.invalid` external-link target, and literal `synthetic-test-vba-bytes` marker are synthetic and non-sensitive. Two repeated diff captures were byte-identical, and workbook SHA-256 values were unchanged before and after inspection, confirming deterministic report output and read-only behavior for the capture.
+
+No demo-blocking product bug was found. The only remaining capture/upload work is human-only: upload the hero PNG to Devpost, and optionally screen-record the sequence below if credits remain comfortable. Every visible claim stays inside the documented boundary: XLSX-Ray does not calculate formulas, execute or analyze VBA, follow external links, mutate workbooks, or claim a complete dependency graph.
 
 ## Demo capture brief
 
@@ -149,6 +187,8 @@ python examples/create_demo_workbooks.py
 ```
 
 Briefly show `examples/generated/before.xlsx` and `examples/generated/after.xlsm`.
+
+For a single-command rehearsal, run `./examples/demo.sh`. During recording, use the individual commands below so the expected `0`, `0`, and `1` statuses remain explicit to the viewer.
 
 **18–35 seconds — Run XLSX-Ray**
 
@@ -204,11 +244,11 @@ Avoid marketing-heavy graphics that hide the actual tool output. The judging cri
 - [ ] Paste and lightly personalize the Devpost description above.
 - [ ] Add the GitHub repository link.
 - [ ] Add all team members and roles, or mark the submission as solo.
-- [ ] Upload at least one project file; the hero screenshot is the minimum.
-- [ ] Preferably add the 45–60 second demo video / GIF.
-- [ ] Verify every screenshot/video claim against the current `main` behavior.
-- [ ] Confirm demo assets contain only generated, non-sensitive workbooks.
-- [ ] Do a final pass for readable text at Devpost thumbnail / embedded-player sizes.
+- [ ] Upload [`xlsx-ray-hero.png`](assets/hack-the-limit/xlsx-ray-hero.png) as the required project file.
+- [ ] Optionally add the 45–60 second demo video / GIF only if capture/editing credits are comfortably available.
+- [x] Verify every screenshot claim against current CLI behavior.
+- [x] Confirm demo assets contain only generated, non-sensitive workbooks.
+- [x] Verify the hero at 1920×1080 with readable text and representative real findings.
 
 ## Work split
 

@@ -22,6 +22,8 @@ XLSX-Ray: formula_changed          Model!B2        high
 
 That distinction matters when spreadsheets contain operational or analytical logic. XLSX-Ray is designed to make those changes visible in the same review and CI workflows teams already use for source code — without turning the tool into an Excel calculation engine.
 
+![XLSX-Ray turns an opaque Git binary change into a structured, high-risk workbook review](docs/assets/hack-the-limit/xlsx-ray-hero.png)
+
 ## What v0.1 reports
 
 | Review fact | What XLSX-Ray does |
@@ -101,6 +103,8 @@ xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm --fai
 ```
 
 `--fail-on high` exits `1` when a high-risk supported change is present; this is useful as a CI gate. An inspection failure exits `2` with an error message.
+
+For a repeatable presentation check that runs both the report-only and threshold flows and verifies the expected exit code, run `./examples/demo.sh` from an activated Python 3.10+ environment where XLSX-Ray is installed.
 
 ## GitHub Actions
 
