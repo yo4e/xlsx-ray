@@ -28,6 +28,29 @@ The software itself is submission-ready. XLSX-Ray already has:
 
 The functional demo flow and required hero screenshot were validated on 2026-08-24. The remaining submission work is human-owned Devpost entry, eligibility/deadline confirmation, and uploading the prepared screenshot. Video/GIF production is optional and should be attempted only when capture/editing credits are comfortably available.
 
+## Fastest first-run path
+
+For a judge, reviewer, or first-time user starting from a fresh checkout, use the guided demo rather than reconstructing the individual validation commands:
+
+```bash
+git clone https://github.com/yo4e/xlsx-ray.git
+cd xlsx-ray
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install .
+./examples/demo.sh
+```
+
+The demo generates only synthetic, non-sensitive workbooks and keeps inspection local and read-only. It prints the real workbook diff once and explicitly directs attention to:
+
+1. `Changes`;
+2. `Highest risk`;
+3. the high-risk rows and their explanations.
+
+It then re-runs the same comparison with `--fail-on high` to prove the CI-gate behavior without printing the same long report a second time. An XLSX-Ray exit status of `1` in this step is **expected success for the configured threshold**: a supported high-risk change was found. It is not an inspection error. The wrapper script verifies that expected `1` and completes successfully.
+
+This presentation-only cleanup does not change risk rules, exit-code semantics, or the local-first / read-only / deterministic product boundary.
+
 ## Recommended title and one-line pitch
 
 **Project title:** XLSX-Ray
@@ -141,7 +164,7 @@ The repository install completed with no runtime dependencies beyond the declare
 | `xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm` | `0` | Wrote a complete nine-finding Markdown report with highest risk `high`. |
 | `xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm --fail-on high` | `1` | Printed the same complete report, then applied the documented CI threshold status. |
 
-The convenience command `./examples/demo.sh` orchestrates those same commands and verifies that the threshold invocation exits `1`; it does not change product semantics.
+The convenience command `./examples/demo.sh` orchestrates those same product commands, prints the complete report only on the first diff, suppresses the duplicate report during the threshold check, and verifies that the threshold invocation exits `1`. The suppression is presentation-only and does not change CLI output or exit semantics.
 
 Repository verification after adding the assets and convenience script:
 
@@ -188,7 +211,7 @@ python examples/create_demo_workbooks.py
 
 Briefly show `examples/generated/before.xlsx` and `examples/generated/after.xlsm`.
 
-For a single-command rehearsal, run `./examples/demo.sh`. During recording, use the individual commands below so the expected `0`, `0`, and `1` statuses remain explicit to the viewer.
+For a single-command rehearsal, run `./examples/demo.sh`. It now labels the three first-run steps, tells the viewer what to read first, and avoids repeating the long report during the threshold check. During recording, use the individual commands below if the expected `0`, `0`, and `1` statuses need to remain explicit to the viewer.
 
 **18–35 seconds — Run XLSX-Ray**
 
@@ -208,7 +231,7 @@ Run:
 xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm --fail-on high
 ```
 
-Show that the report is still produced and the command exits `1` because a supported high-risk change exists.
+Show that the report is still produced and the command exits `1` because a supported high-risk change exists. Explicitly frame `1` as successful threshold detection, not an inspection failure.
 
 **48–60 seconds — The boundary / close**
 
