@@ -24,6 +24,31 @@ That distinction matters when spreadsheets contain operational or analytical log
 
 ![XLSX-Ray turns an opaque Git binary change into a structured, high-risk workbook review](docs/assets/hack-the-limit/xlsx-ray-hero.png)
 
+## Try the demo
+
+The shortest supported path from a fresh checkout is:
+
+```bash
+git clone https://github.com/yo4e/xlsx-ray.git
+cd xlsx-ray
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install .
+./examples/demo.sh
+```
+
+The demo generates synthetic, non-sensitive workbooks locally and then shows one real XLSX-Ray review report. Read it in this order:
+
+1. `Changes` — how many supported changes were found;
+2. `Highest risk` — the highest review risk assigned by the fixed rules;
+3. the high-risk rows — what changed and why it matters.
+
+The final step re-runs the same comparison with `--fail-on high` to demonstrate the CI gate. That second, identical report is intentionally hidden by the demo script so the important signal is not buried in duplicate output.
+
+**Expected result:** XLSX-Ray itself exits `1` for the threshold check because a supported high-risk change was detected. That is successful CI threshold detection, not a failed inspection or broken demo. `examples/demo.sh` verifies that expected status and completes successfully.
+
+The demo does not change the product boundary: inspection remains local-first, read-only, and deterministic, with no formula calculation or macro execution.
+
 ## What v0.1 reports
 
 | Review fact | What XLSX-Ray does |
@@ -80,6 +105,8 @@ Versioned JSON Schema files ship with the package at `xlsx_ray/schemas/diff-0.2.
 
 Other non-zero statuses are not part of the handled CLI contract and may indicate an unexpected runtime/environment failure. XLSX-Ray currently has no separate progress/debug logging stream: normal findings and warnings belong in the report, while handled CLI/inspection errors are written by the argument parser to stderr. For that reason, `--verbose` / `--quiet` flags are intentionally not exposed until there is meaningful diagnostic logging to control.
 
+When using `--fail-on high`, an exit status of `1` means the inspection succeeded and the configured CI threshold was met. In `examples/demo.sh`, that status is deliberately expected and verified; the script then exits successfully after explaining the gate result.
+
 ```text
 # XLSX-Ray workbook diff
 
@@ -104,7 +131,7 @@ xlsx-ray diff examples/generated/before.xlsx examples/generated/after.xlsm --fai
 
 `--fail-on high` exits `1` when a high-risk supported change is present; this is useful as a CI gate. An inspection failure exits `2` with an error message.
 
-For a repeatable presentation check that runs both the report-only and threshold flows and verifies the expected exit code, run `./examples/demo.sh` from an activated Python 3.10+ environment where XLSX-Ray is installed.
+For the guided first-run experience, use `./examples/demo.sh` from an activated Python 3.10+ environment where XLSX-Ray is installed. It prints the real report once, points out what to read first, and verifies the expected threshold exit without repeating the same long report.
 
 ## GitHub Actions
 
